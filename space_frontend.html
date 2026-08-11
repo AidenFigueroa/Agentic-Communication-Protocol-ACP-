@@ -1,0 +1,992 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Space Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+:root {
+  --bg: #07090f;
+  --panel: rgba(15, 18, 29, 0.76);
+  --panel-strong: rgba(19, 23, 36, 0.94);
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.14);
+  --text: #f6f7fb;
+  --muted: #8c93a7;
+  --muted-2: #626a80;
+  --accent: #8b7cff;
+  --accent-2: #61d3ff;
+  --success: #65e6a5;
+  --danger: #ff7b8b;
+  --warning: #ffc96b;
+  --shadow: 0 32px 80px rgba(0, 0, 0, 0.34);
+}
+
+* { box-sizing: border-box; }
+
+html { color-scheme: dark; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(88, 76, 190, 0.16), transparent 30%),
+    radial-gradient(circle at 85% 75%, rgba(64, 156, 199, 0.11), transparent 28%),
+    var(--bg);
+  color: var(--text);
+  font-family: "DM Sans", sans-serif;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.18;
+  background-image:
+    linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,.9), transparent 92%);
+}
+
+button, textarea { font: inherit; }
+button { color: inherit; }
+
+.ambient {
+  position: fixed;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: .10;
+  pointer-events: none;
+}
+.ambient-one { left: -200px; top: 10%; background: var(--accent); }
+.ambient-two { right: -220px; bottom: 0; background: var(--accent-2); }
+
+.app-shell {
+  width: min(1580px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 18px 0 28px;
+}
+
+.topbar {
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 18px;
+  padding: 0 6px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.brand-mark {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(139,124,255,.5);
+  border-radius: 11px;
+  background: linear-gradient(145deg, rgba(139,124,255,.2), rgba(97,211,255,.04));
+  box-shadow: inset 0 0 18px rgba(139,124,255,.10);
+}
+.brand-mark span {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: 0 0 22px rgba(139,124,255,.85);
+}
+.brand strong {
+  display: block;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 15px;
+  letter-spacing: .2em;
+}
+.brand small { color: var(--muted); font-size: 11px; }
+
+.network-status {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--muted);
+  font-size: 12px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255,255,255,.025);
+}
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 12px rgba(101,230,165,.75);
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: 260px minmax(440px, 1fr) 360px;
+  min-height: calc(100vh - 114px);
+  gap: 14px;
+}
+
+.panel {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  backdrop-filter: blur(18px);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.left-panel, .trace-panel { padding: 20px; }
+.panel-heading h2, .conversation-head h1 {
+  margin: 3px 0 7px;
+  font-family: "Space Grotesk", sans-serif;
+  letter-spacing: -.03em;
+}
+.panel-heading h2 { font-size: 20px; }
+.panel-heading p:not(.eyebrow) {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+.eyebrow {
+  margin: 0;
+  color: var(--accent-2);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .2em;
+}
+
+.quick-actions {
+  display: grid;
+  gap: 9px;
+  margin: 22px 0 26px;
+}
+.quick-action {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  padding: 11px;
+  background: rgba(255,255,255,.025);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  cursor: pointer;
+  transition: .2s ease;
+}
+.quick-action:hover {
+  border-color: rgba(139,124,255,.45);
+  background: rgba(139,124,255,.07);
+  transform: translateY(-1px);
+}
+.quick-icon {
+  flex: 0 0 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: rgba(139,124,255,.10);
+  color: #c7c0ff;
+  font-family: "Space Grotesk";
+  font-size: 17px;
+}
+.quick-action strong, .quick-action small { display: block; }
+.quick-action strong { font-size: 12.5px; margin-bottom: 2px; }
+.quick-action small { font-size: 10.5px; color: var(--muted); }
+
+.service-list {
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+  display: grid;
+  gap: 5px;
+}
+.service-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 7px;
+  border-radius: 10px;
+}
+.service-row:hover { background: rgba(255,255,255,.025); }
+.service-icon {
+  width: 27px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+.service-copy { flex: 1; min-width: 0; }
+.service-copy strong, .service-copy small { display: block; }
+.service-copy strong { font-size: 11px; font-weight: 600; }
+.service-copy small { color: var(--muted-2); font-size: 9.5px; margin-top: 1px; }
+.service-state { color: var(--muted-2); font-size: 16px; }
+.service-state.online { color: var(--success); text-shadow: 0 0 10px rgba(101,230,165,.6); }
+.service-state.offline { color: var(--danger); }
+
+.conversation-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.conversation-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 26px 18px;
+  border-bottom: 1px solid var(--line);
+}
+.conversation-head h1 { font-size: clamp(22px, 2.4vw, 31px); }
+.ghost-button {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: transparent;
+  padding: 8px 11px;
+  color: var(--muted);
+  font-size: 11px;
+  cursor: pointer;
+}
+.ghost-button:hover { color: var(--text); border-color: var(--line-strong); }
+
+.conversation {
+  flex: 1;
+  min-height: 300px;
+  overflow-y: auto;
+  padding: 25px 26px 20px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,.12) transparent;
+}
+.message {
+  display: flex;
+  gap: 11px;
+  margin-bottom: 22px;
+  animation: rise .28s ease both;
+}
+.message.user-message { justify-content: flex-end; }
+.message.user-message .avatar { order: 2; background: rgba(255,255,255,.06); }
+.message.user-message .bubble { order: 1; background: rgba(139,124,255,.12); border-color: rgba(139,124,255,.20); }
+.avatar {
+  width: 31px;
+  height: 31px;
+  flex: 0 0 31px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: linear-gradient(145deg, rgba(139,124,255,.22), rgba(97,211,255,.08));
+  border: 1px solid var(--line);
+  font-family: "Space Grotesk";
+  font-size: 11px;
+  font-weight: 700;
+}
+.bubble {
+  max-width: min(650px, 82%);
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255,255,255,.027);
+}
+.bubble-meta {
+  color: var(--muted-2);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+.bubble p { margin: 0; font-size: 13px; line-height: 1.55; }
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+.result-card {
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid var(--line);
+}
+.result-card small { display: block; color: var(--muted-2); font-size: 9px; text-transform: uppercase; letter-spacing: .12em; margin-bottom: 4px; }
+.result-card strong { font-size: 12px; word-break: break-word; }
+.error-bubble { border-color: rgba(255,123,139,.28); background: rgba(255,123,139,.06); }
+
+.composer {
+  margin: 0 18px 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: 16px;
+  background: rgba(7,9,15,.76);
+  padding: 11px 12px 10px;
+  box-shadow: 0 15px 45px rgba(0,0,0,.22);
+}
+.composer:focus-within { border-color: rgba(139,124,255,.42); box-shadow: 0 0 0 3px rgba(139,124,255,.06); }
+.composer textarea {
+  width: 100%;
+  max-height: 130px;
+  resize: none;
+  outline: none;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  padding: 5px 5px 8px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.composer textarea::placeholder { color: #596078; }
+.composer-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+.shortcut { color: var(--muted-2); font-size: 9.5px; padding-left: 5px; }
+.send-button {
+  border: 0;
+  border-radius: 10px;
+  padding: 9px 11px 9px 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  background: linear-gradient(135deg, #8b7cff, #6f80ff);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(111,128,255,.24);
+  transition: .18s ease;
+}
+.send-button:hover { transform: translateY(-1px); box-shadow: 0 10px 28px rgba(111,128,255,.32); }
+.send-button:disabled { opacity: .5; cursor: default; transform: none; }
+.send-arrow { font-size: 15px; line-height: 1; }
+
+.trace-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+.trace-badge {
+  padding: 5px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.trace-badge.running { color: var(--warning); border-color: rgba(255,201,107,.25); }
+.trace-badge.success { color: var(--success); border-color: rgba(101,230,165,.25); }
+.trace-badge.error { color: var(--danger); border-color: rgba(255,123,139,.25); }
+
+.trace-empty {
+  min-height: 440px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 18px;
+  text-align: center;
+  color: var(--muted-2);
+}
+.trace-empty p { width: 80%; font-size: 11px; line-height: 1.5; }
+.trace-orbit {
+  width: 74px;
+  height: 74px;
+  border: 1px solid rgba(139,124,255,.22);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+.trace-orbit::before {
+  content: "";
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  border: 1px dashed rgba(97,211,255,.20);
+  border-radius: 50%;
+}
+.trace-orbit span {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 18px rgba(139,124,255,.7);
+}
+
+.trace-content { padding-top: 12px; }
+.trace-content details {
+  border-bottom: 1px solid var(--line);
+}
+.trace-content summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 13px 2px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.trace-content summary::-webkit-details-marker { display: none; }
+.trace-content summary span {
+  color: var(--accent-2);
+  font-size: 8px;
+  letter-spacing: .08em;
+}
+.trace-content pre {
+  margin: 0 0 13px;
+  padding: 11px;
+  max-height: 250px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(2,4,9,.6);
+  color: #b9c2d8;
+  font: 10.5px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.hidden { display: none !important; }
+.loading-dots::after { content: ""; animation: dots 1.2s infinite; }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes dots {
+  0% { content: ""; }
+  33% { content: "."; }
+  66% { content: ".."; }
+  100% { content: "..."; }
+}
+
+@media (max-width: 1180px) {
+  .workspace { grid-template-columns: 220px 1fr; }
+  .trace-panel { grid-column: 1 / -1; }
+  .trace-empty { min-height: 220px; }
+}
+
+@media (max-width: 760px) {
+  .app-shell { width: min(100% - 18px, 1580px); padding-top: 8px; }
+  .topbar { height: 58px; }
+  .brand small { display: none; }
+  .workspace { grid-template-columns: 1fr; min-height: auto; }
+  .left-panel { order: 2; }
+  .conversation-panel { order: 1; min-height: 72vh; }
+  .trace-panel { order: 3; }
+  .conversation-head { padding: 20px 18px 15px; }
+  .conversation { padding: 19px 18px; }
+  .composer { margin: 0 10px 10px; }
+  .shortcut { display: none; }
+  .composer-footer { justify-content: flex-end; }
+  .bubble { max-width: 88%; }
+}
+
+</style>
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Space Console home">
+        <span class="brand-mark"><span></span></span>
+        <span>
+          <strong>SPACE</strong>
+          <small>Agentic Communication Console</small>
+        </span>
+      </a>
+
+      <div class="network-status" aria-label="Space network status">
+        <span class="status-dot"></span>
+        <span id="networkText">Local network</span>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="left-panel panel">
+        <div class="panel-heading">
+          <p class="eyebrow">COMMANDS</p>
+          <h2>Quick actions</h2>
+          <p>Send a normal request. The protocol layer handles the ugly parts, as nature intended.</p>
+        </div>
+
+        <div class="quick-actions">
+          <button class="quick-action" data-prompt="Give me the status of order 1152 and tell me when it will arrive.">
+            <span class="quick-icon">↗</span>
+            <span>
+              <strong>Track order</strong>
+              <small>Status + delivery</small>
+            </span>
+          </button>
+
+          <button class="quick-action" data-prompt="Give me the tracking number for order 1842.">
+            <span class="quick-icon">#</span>
+            <span>
+              <strong>Tracking number</strong>
+              <small>Find shipment details</small>
+            </span>
+          </button>
+
+          <button class="quick-action" data-prompt="Cancel order 1152.">
+            <span class="quick-icon">×</span>
+            <span>
+              <strong>Cancel order</strong>
+              <small>Route to Store Orders</small>
+            </span>
+          </button>
+        </div>
+
+        <div class="service-list">
+          <div class="service-row">
+            <span class="service-icon">R</span>
+            <span class="service-copy">
+              <strong>Intent Router</strong>
+              <small>127.0.0.1:8000</small>
+            </span>
+            <span class="service-state" id="routerState">•</span>
+          </div>
+          <div class="service-row">
+            <span class="service-icon">S</span>
+            <span class="service-copy">
+              <strong>Store Support</strong>
+              <small>127.0.0.1:8101</small>
+            </span>
+            <span class="service-state" id="supportState">•</span>
+          </div>
+          <div class="service-row">
+            <span class="service-icon">O</span>
+            <span class="service-copy">
+              <strong>Store Orders</strong>
+              <small>127.0.0.1:8102</small>
+            </span>
+            <span class="service-state" id="ordersState">•</span>
+          </div>
+        </div>
+      </aside>
+
+      <section class="conversation-panel panel">
+        <div class="conversation-head">
+          <div>
+            <p class="eyebrow">SPACE SESSION</p>
+            <h1>What should your Space do?</h1>
+          </div>
+          <button id="clearButton" class="ghost-button" type="button">Clear</button>
+        </div>
+
+        <div id="conversation" class="conversation" aria-live="polite">
+          <div class="message system-message">
+            <div class="avatar">S</div>
+            <div class="bubble">
+              <div class="bubble-meta">Space</div>
+              <p>Describe what you want in plain English. I’ll encode the intention, select a Space, send the protocol message, and show you what happened.</p>
+            </div>
+          </div>
+        </div>
+
+        <form id="composer" class="composer">
+          <textarea
+            id="messageInput"
+            rows="1"
+            maxlength="500"
+            placeholder="e.g. Give me the status of order 1152 and tell me when it will arrive..."
+            aria-label="Message"
+          ></textarea>
+          <div class="composer-footer">
+            <span class="shortcut">Enter to send · Shift+Enter for newline</span>
+            <button id="sendButton" class="send-button" type="submit">
+              <span>Send request</span>
+              <span class="send-arrow">↗</span>
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <aside class="trace-panel panel">
+        <div class="panel-heading trace-heading">
+          <div>
+            <p class="eyebrow">PROTOCOL TRACE</p>
+            <h2>Under the hood</h2>
+          </div>
+          <span id="traceBadge" class="trace-badge">Idle</span>
+        </div>
+
+        <div id="traceEmpty" class="trace-empty">
+          <div class="trace-orbit"><span></span></div>
+          <p>Your protocol trace will appear here after a request.</p>
+        </div>
+
+        <div id="traceContent" class="trace-content hidden">
+          <details open>
+            <summary>
+              <span>01</span>
+              Parsed intention
+            </summary>
+            <pre id="intentJson"></pre>
+          </details>
+
+          <details>
+            <summary>
+              <span>02</span>
+              Selected route
+            </summary>
+            <pre id="routeJson"></pre>
+          </details>
+
+          <details>
+            <summary>
+              <span>03</span>
+              Protocol message
+            </summary>
+            <pre id="protocolJson"></pre>
+          </details>
+
+          <details>
+            <summary>
+              <span>04</span>
+              Space response
+            </summary>
+            <pre id="responseJson"></pre>
+          </details>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+const INTENT_API_URL = "/api/route-intent";
+const ROUTER_HEALTH_URL = "/health/router";
+const SUPPORT_HEALTH_URL = "/health/support";
+const ORDERS_HEALTH_URL = "/health/orders";
+
+const composer = document.getElementById("composer");
+const messageInput = document.getElementById("messageInput");
+const sendButton = document.getElementById("sendButton");
+const conversation = document.getElementById("conversation");
+const clearButton = document.getElementById("clearButton");
+
+const traceEmpty = document.getElementById("traceEmpty");
+const traceContent = document.getElementById("traceContent");
+const traceBadge = document.getElementById("traceBadge");
+const intentJson = document.getElementById("intentJson");
+const routeJson = document.getElementById("routeJson");
+const protocolJson = document.getElementById("protocolJson");
+const responseJson = document.getElementById("responseJson");
+
+const initialConversation = conversation.innerHTML;
+
+function safeText(value) {
+  return String(value ?? "");
+}
+
+function formatLabel(key) {
+  return key
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function addMessage(role, body, { error = false, result = null } = {}) {
+  const wrapper = document.createElement("div");
+  wrapper.className = `message ${role === "user" ? "user-message" : "system-message"}`;
+
+  const avatar = document.createElement("div");
+  avatar.className = "avatar";
+  avatar.textContent = role === "user" ? "Y" : "S";
+
+  const bubble = document.createElement("div");
+  bubble.className = `bubble${error ? " error-bubble" : ""}`;
+
+  const meta = document.createElement("div");
+  meta.className = "bubble-meta";
+  meta.textContent = role === "user" ? "You" : error ? "Space · Error" : "Space";
+
+  const p = document.createElement("p");
+  p.textContent = body;
+
+  bubble.append(meta, p);
+
+  if (result && typeof result === "object") {
+    const grid = document.createElement("div");
+    grid.className = "result-grid";
+
+    Object.entries(result).forEach(([key, value]) => {
+      const card = document.createElement("div");
+      card.className = "result-card";
+
+      const label = document.createElement("small");
+      label.textContent = formatLabel(key);
+
+      const strong = document.createElement("strong");
+      strong.textContent = value === null ? "Not available" : safeText(value);
+
+      card.append(label, strong);
+      grid.appendChild(card);
+    });
+
+    bubble.appendChild(grid);
+  }
+
+  wrapper.append(avatar, bubble);
+  conversation.appendChild(wrapper);
+  conversation.scrollTop = conversation.scrollHeight;
+  return wrapper;
+}
+
+function addThinkingMessage() {
+  const node = addMessage("space", "Encoding intention");
+  const p = node.querySelector("p");
+  p.classList.add("loading-dots");
+  return node;
+}
+
+function setTraceStatus(text, state = "") {
+  traceBadge.textContent = text;
+  traceBadge.className = `trace-badge ${state}`.trim();
+}
+
+function showTrace(data = {}) {
+  traceEmpty.classList.add("hidden");
+  traceContent.classList.remove("hidden");
+
+  if (data.parsed_intent !== undefined) {
+    intentJson.textContent = JSON.stringify(data.parsed_intent, null, 2);
+  }
+  if (data.selected_route !== undefined) {
+    routeJson.textContent = JSON.stringify(data.selected_route, null, 2);
+  }
+  if (data.protocol_message !== undefined) {
+    protocolJson.textContent = JSON.stringify(data.protocol_message, null, 2);
+  }
+  if (data.space_response !== undefined) {
+    responseJson.textContent = JSON.stringify(data.space_response, null, 2);
+  }
+}
+
+function clearTrace() {
+  traceContent.classList.add("hidden");
+  traceEmpty.classList.remove("hidden");
+  intentJson.textContent = "";
+  routeJson.textContent = "";
+  protocolJson.textContent = "";
+  responseJson.textContent = "";
+  setTraceStatus("Idle");
+}
+
+function autoResize() {
+  messageInput.style.height = "auto";
+  messageInput.style.height = `${Math.min(messageInput.scrollHeight, 130)}px`;
+}
+
+async function postJson(url, payload) {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    data = { error: `Non-JSON response from ${url}` };
+  }
+
+  if (!response.ok) {
+    const error = new Error(`HTTP ${response.status}`);
+    error.status = response.status;
+    error.data = data;
+    throw error;
+  }
+
+  return data;
+}
+
+function humanResult(action, response) {
+  const result = response?.result ?? {};
+
+  if (action === "check_order_status") {
+    const pieces = [];
+
+    if (result.current_status) {
+      pieces.push(
+        `status: ${result.current_status.replaceAll("_", " ")}`
+      );
+    }
+
+    if (result.estimated_delivery) {
+      pieces.push(
+        `estimated delivery: ${result.estimated_delivery}`
+      );
+    }
+
+    if ("tracking_number" in result) {
+      pieces.push(
+        `tracking number: ${result.tracking_number ?? "not available yet"}`
+      );
+    }
+
+    if (pieces.length) {
+      return `Order ${result.order_id ?? ""} — ${pieces.join(", ")}.`;
+    }
+
+    return `Order ${result.order_id ?? ""} information was returned.`;
+  }
+
+  if (action === "cancel_order") {
+    return `Order ${result.order_id ?? ""} was cancelled successfully.`;
+  }
+
+  return "The receiving Space completed the request.";
+}
+
+function extractErrorMessage(error) {
+  const data = error?.data;
+  if (!data) return error?.message || "The request failed.";
+
+  if (typeof data.detail === "string") return data.detail;
+  if (data.detail?.question) return data.detail.question;
+  if (data.detail?.message) return data.detail.message;
+  if (data.error) return `${data.error}${data.details ? `: ${JSON.stringify(data.details)}` : ""}`;
+  return JSON.stringify(data);
+}
+
+async function handleRequest(message) {
+  addMessage("user", message);
+  const thinking = addThinkingMessage();
+  sendButton.disabled = true;
+  setTraceStatus("Routing", "running");
+
+  try {
+    const routingResult = await postJson(INTENT_API_URL, { message });
+    showTrace(routingResult);
+
+    thinking.querySelector("p").textContent = `Intent encoded as “${routingResult.parsed_intent.action}”. Sending to ${routingResult.selected_route.space_id}...`;
+    thinking.querySelector("p").classList.remove("loading-dots");
+
+    setTraceStatus("Sending", "running");
+
+    const spaceResponse = await postJson(
+      "/api/send-space",
+      {
+        endpoint: routingResult.selected_route.endpoint,
+        protocol_message: routingResult.protocol_message,
+      },
+    );
+
+    showTrace({ ...routingResult, space_response: spaceResponse });
+    setTraceStatus("Complete", "success");
+
+    thinking.remove();
+    addMessage(
+      "space",
+      humanResult(routingResult.parsed_intent.action, spaceResponse),
+      { result: spaceResponse.result },
+    );
+  } catch (error) {
+    thinking.remove();
+    setTraceStatus("Failed", "error");
+
+    if (error?.data) {
+      responseJson.textContent = JSON.stringify(error.data, null, 2);
+      traceEmpty.classList.add("hidden");
+      traceContent.classList.remove("hidden");
+    }
+
+    addMessage("space", extractErrorMessage(error), { error: true });
+  } finally {
+    sendButton.disabled = false;
+    messageInput.focus();
+  }
+}
+
+composer.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const message = messageInput.value.trim();
+  if (!message || sendButton.disabled) return;
+
+  messageInput.value = "";
+  autoResize();
+  handleRequest(message);
+});
+
+messageInput.addEventListener("input", autoResize);
+messageInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    composer.requestSubmit();
+  }
+});
+
+document.querySelectorAll(".quick-action").forEach((button) => {
+  button.addEventListener("click", () => {
+    messageInput.value = button.dataset.prompt || "";
+    autoResize();
+    messageInput.focus();
+  });
+});
+
+clearButton.addEventListener("click", () => {
+  conversation.innerHTML = initialConversation;
+  clearTrace();
+  messageInput.focus();
+});
+
+async function probe(url, stateElement) {
+  try {
+    const response = await fetch(url, { method: "GET" });
+    if (!response.ok) throw new Error();
+    stateElement.className = "service-state online";
+    stateElement.title = "Online";
+    return true;
+  } catch {
+    stateElement.className = "service-state offline";
+    stateElement.title = "Offline or blocked by CORS";
+    return false;
+  }
+}
+
+async function refreshHealth() {
+  const states = await Promise.all([
+    probe(ROUTER_HEALTH_URL, document.getElementById("routerState")),
+    probe(SUPPORT_HEALTH_URL, document.getElementById("supportState")),
+    probe(ORDERS_HEALTH_URL, document.getElementById("ordersState")),
+  ]);
+
+  const online = states.filter(Boolean).length;
+  document.getElementById("networkText").textContent = `${online}/3 services reachable`;
+}
+
+refreshHealth();
+setInterval(refreshHealth, 10000);
+messageInput.focus();
+
+</script>
+</body>
+</html>
