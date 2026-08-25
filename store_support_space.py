@@ -7,10 +7,12 @@ from http.server import (
 )
 from typing import Any
 
+import os
+
 
 SPACE_ID = "space://store-support"
-HOST = "127.0.0.1"
-PORT = 8101
+HOST = "0.0.0.0"
+PORT = int(os.environ.get("PORT", "8101"))
 
 
 # Mock store information for the proof of concept.
