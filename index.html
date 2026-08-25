@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Space Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Space Console home">
+        <span class="brand-mark"><span></span></span>
+        <span>
+          <strong>SPACE</strong>
+          <small>Agentic Communication Console</small>
+        </span>
+      </a>
+
+      <div class="network-status" aria-label="Space network status">
+        <span class="status-dot"></span>
+        <span id="networkText">Local network</span>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="left-panel panel">
+        <div class="panel-heading">
+          <p class="eyebrow">COMMANDS</p>
+          <h2>Quick actions</h2>
+          <p>Send a normal request. The protocol layer handles the ugly parts, as nature intended.</p>
+        </div>
+
+        <div class="quick-actions">
+          <button class="quick-action" data-prompt="Give me the status of order 1152 and tell me when it will arrive.">
+            <span class="quick-icon">↗</span>
+            <span>
+              <strong>Track order</strong>
+              <small>Status + delivery</small>
+            </span>
+          </button>
+
+          <button class="quick-action" data-prompt="Give me the tracking number for order 1842.">
+            <span class="quick-icon">#</span>
+            <span>
+              <strong>Tracking number</strong>
+              <small>Find shipment details</small>
+            </span>
+          </button>
+
+          <button class="quick-action" data-prompt="Cancel order 1152.">
+            <span class="quick-icon">×</span>
+            <span>
+              <strong>Cancel order</strong>
+              <small>Route to Store Orders</small>
+            </span>
+          </button>
+        </div>
+
+        <div class="service-list">
+          <div class="service-row">
+            <span class="service-icon">R</span>
+            <span class="service-copy">
+              <strong>Intent Router</strong>
+              <small>127.0.0.1:8000</small>
+            </span>
+            <span class="service-state" id="routerState">•</span>
+          </div>
+          <div class="service-row">
+            <span class="service-icon">S</span>
+            <span class="service-copy">
+              <strong>Store Support</strong>
+              <small>127.0.0.1:8101</small>
+            </span>
+            <span class="service-state" id="supportState">•</span>
+          </div>
+          <div class="service-row">
+            <span class="service-icon">O</span>
+            <span class="service-copy">
+              <strong>Store Orders</strong>
+              <small>127.0.0.1:8102</small>
+            </span>
+            <span class="service-state" id="ordersState">•</span>
+          </div>
+        </div>
+      </aside>
+
+      <section class="conversation-panel panel">
+        <div class="conversation-head">
+          <div>
+            <p class="eyebrow">SPACE SESSION</p>
+            <h1>What should your Space do?</h1>
+          </div>
+          <button id="clearButton" class="ghost-button" type="button">Clear</button>
+        </div>
+
+        <div id="conversation" class="conversation" aria-live="polite">
+          <div class="message system-message">
+            <div class="avatar">S</div>
+            <div class="bubble">
+              <div class="bubble-meta">Space</div>
+              <p>Describe what you want in plain English. I’ll encode the intention, select a Space, send the protocol message, and show you what happened.</p>
+            </div>
+          </div>
+        </div>
+
+        <form id="composer" class="composer">
+          <textarea
+            id="messageInput"
+            rows="1"
+            maxlength="500"
+            placeholder="e.g. Give me the status of order 1152 and tell me when it will arrive..."
+            aria-label="Message"
+          ></textarea>
+          <div class="composer-footer">
+            <span class="shortcut">Enter to send · Shift+Enter for newline</span>
+            <button id="sendButton" class="send-button" type="submit">
+              <span>Send request</span>
+              <span class="send-arrow">↗</span>
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <aside class="trace-panel panel">
+        <div class="panel-heading trace-heading">
+          <div>
+            <p class="eyebrow">PROTOCOL TRACE</p>
+            <h2>Under the hood</h2>
+          </div>
+          <span id="traceBadge" class="trace-badge">Idle</span>
+        </div>
+
+        <div id="traceEmpty" class="trace-empty">
+          <div class="trace-orbit"><span></span></div>
+          <p>Your protocol trace will appear here after a request.</p>
+        </div>
+
+        <div id="traceContent" class="trace-content hidden">
+          <details open>
+            <summary>
+              <span>01</span>
+              Parsed intention
+            </summary>
+            <pre id="intentJson"></pre>
+          </details>
+
+          <details>
+            <summary>
+              <span>02</span>
+              Selected route
+            </summary>
+            <pre id="routeJson"></pre>
+          </details>
+
+          <details>
+            <summary>
+              <span>03</span>
+              Protocol message
+            </summary>
+            <pre id="protocolJson"></pre>
+          </details>
+
+          <details>
+            <summary>
+              <span>04</span>
+              Space response
+            </summary>
+            <pre id="responseJson"></pre>
+          </details>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
