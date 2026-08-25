@@ -10,6 +10,11 @@ from pydantic import BaseModel, Field
 
 from space_registry import resolve_route
 
+from pathlib import Path
+from fastapi.responses import FileResponse
+
+BASE_DIR = Path(__file__).resolve().parent
+
 
 # =========================================================
 # Configuration
@@ -318,13 +323,25 @@ def build_protocol_message(
 # API routes
 # =========================================================
 
-@app.get("/")
-def root() -> dict[str, str]:
+@app.get("/", include_in_schema=False)
+def frontend():
+    return FileResponse(BASE_DIR / "space_frontend.html")
+
+
+@app.get("/style.css", include_in_schema=False)
+def stylesheet():
+    return FileResponse(
+        BASE_DIR / "style.css",
+        media_type="text/css"
+    )
+
+
+@app.get("/health")
+def health():
     return {
         "name": "Space Intention Encoder and Switch",
         "version": "0.2",
-        "status": "online",
-        "docs": "/docs",
+        "status": "online"
     }
 
 
